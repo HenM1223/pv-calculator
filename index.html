@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מחשבון Agro-PV | AVO Engineering</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Assistant', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl gap-4">
+            <div>
+                <div class="flex items-center gap-3">
+                    <span class="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20 text-2xl">⚡</span>
+                    <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">כלי תכנון Agro-PV & תחנות השנאה</h1>
+                </div>
+                <p class="text-slate-400 text-sm mt-1">חישוב הספקי DC/AC, פריסת סטרינגים וקביעת כמות תחנות MVS</p>
+            </div>
+            <div class="flex items-center gap-2 bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700/60 text-xs font-semibold text-slate-300">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                מערכת חישוב שדה פעילה
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left 2 Cols: Inputs -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- General Parameters Card -->
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-lg space-y-4">
+                    <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 flex items-center gap-2">
+                        <span>⚙️</span> פרמטרים כלליים למתקן
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">הספק פאנל בודד (W)</label>
+                            <input type="number" id="modulePower" value="650" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">יחס יעד מבוקש (DC/AC)</label>
+                            <input type="number" step="0.01" id="targetRatio" value="1.05" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">הספק תחנת MVS (kVA)</label>
+                            <input type="number" id="mvsRating" value="6400" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 transition">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tables Configuration Card -->
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-lg space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <h2 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+                            <span>📐</span> פריסת שולחנות וסטרינגים בשדה
+                        </h2>
+                        <button id="addTableBtn" class="bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                            <span>+</span> הוסף סוג שולחן
+                        </button>
+                    </div>
+
+                    <div id="tablesContainer" class="space-y-3">
+                        <!-- Table rows injected via JS -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Col: Summary Results -->
+            <div class="space-y-6">
+                
+                <!-- Main KPI Card -->
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-lg space-y-5">
+                    <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 flex items-center gap-2">
+                        <span>📊</span> סיכום תוצאות המתקן
+                    </h2>
+
+                    <!-- Total DC Power Banner -->
+                    <div class="bg-slate-950 border border-slate-800/80 p-4 rounded-xl">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">הספק DC מותקן בשדה</span>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span id="totalDCPower" class="text-3xl font-extrabold text-emerald-400">0</span>
+                            <span class="text-slate-400 font-semibold">MWp</span>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-1 font-mono" id="totalDCPowerKW">0 kWp</div>
+                    </div>
+
+                    <!-- Required AC Power -->
+                    <div class="bg-slate-950 border border-slate-800/80 p-4 rounded-xl">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">הספק AC מחושב ליעד (1.05)</span>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span id="requiredACPower" class="text-3xl font-extrabold text-blue-400">0</span>
+                            <span class="text-slate-400 font-semibold">MVA</span>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-1 font-mono" id="requiredACPowerKVA">0 kVA</div>
+                    </div>
+
+                    <!-- MVS Count -->
+                    <div class="bg-slate-950 border border-emerald-500/30 p-5 rounded-xl bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/20">
+                        <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider block">כמות תחנות MVS נדרשת (תיאורטי)</span>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span id="mvsExactCount" class="text-4xl font-black text-white">0.00</span>
+                            <span class="text-emerald-400 font-bold">תחנות</span>
+                        </div>
+                        <span class="text-xs text-slate-400 mt-2 block border-t border-slate-800/80 pt-2 font-mono">
+                            חלוקה לפי שנאי של <span id="mvsSizeDisplay">6,400</span> kVA
+                        </span>
+                    </div>
+
+                    <!-- Field Quantities -->
+                    <div class="space-y-2 text-xs border-t border-slate-800 pt-4">
+                        <div class="flex justify-between py-1 border-b border-slate-800/40">
+                            <span class="text-slate-400">סה"כ פאנלים סולאריים:</span>
+                            <span id="totalPanelsCount" class="font-bold text-slate-200 font-mono">0</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-800/40">
+                            <span class="text-slate-400">סה"כ שולחנות בשדה:</span>
+                            <span id="totalTablesCount" class="font-bold text-slate-200 font-mono">0</span>
+                        </div>
+                        <div class="flex justify-between py-1">
+                            <span class="text-slate-400">סה"כ סטרינגים בשדה:</span>
+                            <span id="totalStringsCount" class="font-bold text-slate-200 font-mono">0</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Practical Selection Card -->
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-lg space-y-4">
+                    <h3 class="text-sm font-bold text-slate-200 uppercase tracking-wider">חלופות ביצוע מעשיות בשטח</h3>
+                    
+                    <div class="grid grid-cols-2 gap-3 text-center">
+                        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-400 block mb-1">עיגול כלפי מעלה</span>
+                            <span id="optACount" class="text-2xl font-black text-slate-100 font-mono">0</span>
+                            <span class="text-xs text-slate-400 block mt-1 font-mono">יחס: <b id="optARatio" class="text-emerald-400">0.00</b></span>
+                        </div>
+                        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-400 block mb-1">עיגול כלפי מטה</span>
+                            <span id="optBCount" class="text-2xl font-black text-slate-100 font-mono">0</span>
+                            <span class="text-xs text-slate-400 block mt-1 font-mono">יחס: <b id="optBRatio" class="text-emerald-400">0.00</b></span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let tableData = [
+            { id: 1, name: "שולחן 108 פאנלים (מלא)", type: "2P", strings: 4, panelsPerString: 27, count: 513 },
+            { id: 2, name: "שולחן 54 פאנלים (חצי)", type: "2P", strings: 2, panelsPerString: 27, count: 62 }
+        ];
+
+        function renderTables() {
+            const container = document.getElementById('tablesContainer');
+            container.innerHTML = '';
+
+            tableData.forEach((row, index) => {
+                const panelsPerTable = row.strings * row.panelsPerString;
+                const totalModulesInRow = panelsPerTable * row.count;
+
+                const div = document.createElement('div');
+                div.className = "bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-3 relative group";
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <input type="text" value="${row.name}" onchange="updateRow(${index}, 'name', this.value)" 
+                               class="bg-transparent text-sm font-bold text-slate-200 focus:outline-none border-b border-transparent focus:border-slate-700">
+                        ${tableData.length > 1 ? `
+                            <button onclick="removeRow(${index})" class="text-slate-500 hover:text-red-400 text-xs px-2 py-1 transition">
+                                הסר ✕
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
+                        <div>
+                            <span class="text-slate-500 block mb-1">תצורה</span>
+                            <select onchange="updateRow(${index}, 'type', this.value)" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-300">
+                                <option value="2P" ${row.type === '2P' ? 'selected' : ''}>2P Tracker</option>
+                                <option value="1P" ${row.type === '1P' ? 'selected' : ''}>1P Tracker</option>
+                                <option value="Fixed" ${row.type === 'Fixed' ? 'selected' : ''}>Fixed Tilt</option>
+                            </select>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block mb-1">סטרינגים לשולחן</span>
+                            <input type="number" min="1" value="${row.strings}" onchange="updateRow(${index}, 'strings', parseInt(this.value) || 1)" 
+                                   class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-200 font-mono">
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block mb-1">פאנלים בסטרינג</span>
+                            <input type="number" min="1" value="${row.panelsPerString}" onchange="updateRow(${index}, 'panelsPerString', parseInt(this.value) || 1)" 
+                                   class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-200 font-mono">
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block mb-1">כמות שולחנות</span>
+                            <input type="number" min="0" value="${row.count}" onchange="updateRow(${index}, 'count', parseInt(this.value) || 0)" 
+                                   class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-emerald-400 font-bold font-mono">
+                        </div>
+                        <div class="col-span-2 sm:col-span-1 flex flex-col justify-end bg-slate-900/50 p-2 rounded-lg border border-slate-800/40">
+                            <span class="text-slate-500 block text-[10px]">סה"כ פאנלים בסוג זה</span>
+                            <span class="font-bold text-slate-300 font-mono">${totalModulesInRow.toLocaleString()}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            calculate();
+        }
+
+        function updateRow(index, field, value) {
+            tableData[index][field] = value;
+            renderTables();
+        }
+
+        function removeRow(index) {
+            tableData.splice(index, 1);
+            renderTables();
+        }
+
+        function addRow() {
+            tableData.push({
+                id: Date.now(),
+                name: `שולחן חדש ${tableData.length + 1}`,
+                type: "2P",
+                strings: 4,
+                panelsPerString: 27,
+                count: 10
+            });
+            renderTables();
+        }
+
+        function calculate() {
+            const modulePower = parseFloat(document.getElementById('modulePower').value) || 650;
+            const targetRatio = parseFloat(document.getElementById('targetRatio').value) || 1.05;
+            const mvsRating = parseFloat(document.getElementById('mvsRating').value) || 6400;
+
+            let totalPanels = 0;
+            let totalTables = 0;
+            let totalStrings = 0;
+
+            tableData.forEach(row => {
+                const panelsInTable = row.strings * row.panelsPerString;
+                totalPanels += panelsInTable * row.count;
+                totalTables += row.count;
+                totalStrings += row.strings * row.count;
+            });
+
+            const totalDCPowerW = totalPanels * modulePower;
+            const totalDCPowerKW = totalDCPowerW / 1000;
+            const totalDCPowerMW = totalDCPowerKW / 1000;
+
+            const requiredACPowerKVA = totalDCPowerKW / targetRatio;
+            const requiredACPowerMVA = requiredACPowerKVA / 1000;
+
+            const exactMVS = requiredACPowerKVA / mvsRating;
+
+            const mvsCeil = Math.ceil(exactMVS);
+            const mvsFloor = Math.max(1, Math.floor(exactMVS));
+            
+            const ratioCeil = totalDCPowerKW / (mvsCeil * mvsRating);
+            const ratioFloor = totalDCPowerKW / (mvsFloor * mvsRating);
+
+            // Update DOM
+            document.getElementById('totalDCPower').innerText = totalDCPowerMW.toFixed(2);
+            document.getElementById('totalDCPowerKW').innerText = `${totalDCPowerKW.toLocaleString(undefined, {maximumFractionDigits: 1})} kWp`;
+
+            document.getElementById('requiredACPower').innerText = requiredACPowerMVA.toFixed(2);
+            document.getElementById('requiredACPowerKVA').innerText = `${requiredACPowerKVA.toLocaleString(undefined, {maximumFractionDigits: 1})} kVA`;
+
+            document.getElementById('mvsExactCount').innerText = exactMVS.toFixed(2);
+            document.getElementById('mvsSizeDisplay').innerText = mvsRating.toLocaleString();
+
+            document.getElementById('totalPanelsCount').innerText = totalPanels.toLocaleString();
+            document.getElementById('totalTablesCount').innerText = totalTables.toLocaleString();
+            document.getElementById('totalStringsCount').innerText = totalStrings.toLocaleString();
+
+            document.getElementById('optACount').innerText = `${mvsCeil} תחנות`;
+            document.getElementById('optARatio').innerText = ratioCeil.toFixed(3);
+
+            document.getElementById('optBCount').innerText = `${mvsFloor} תחנות`;
+            document.getElementById('optBRatio').innerText = ratioFloor.toFixed(3);
+        }
+
+        // Attach listeners
+        document.getElementById('modulePower').addEventListener('input', calculate);
+        document.getElementById('targetRatio').addEventListener('input', calculate);
+        document.getElementById('mvsRating').addEventListener('input', calculate);
+        document.getElementById('addTableBtn').addEventListener('click', addRow);
+
+        // Initial run
+        renderTables();
+    </script>
+</body>
+</html>
