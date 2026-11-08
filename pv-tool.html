@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מחשבון Agro-PV & אגירה | AVO Engineering</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- ExcelJS & FileSaver CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        body { font-family: 'Assistant', sans-serif; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl gap-4">
+            <div>
+                <div class="flex items-center gap-3">
+                    <span class="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20 text-2xl">⚡</span>
+                    <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">כלי תכנון Agro-PV & אגירה</h1>
+                </div>
+                <p class="text-slate-400 text-sm mt-1">חישוב הספקי DC/AC, פריסת שדות וייצוא נתוני מערכת לאקסל</p>
+            </div>
+            
+            <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-emerald-900/50 border border-emerald-400/30 flex items-center gap-2 transition transform active:scale-95">
+                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
+                    <path d="M8.5 13.5l2 3.5-2 3.5h1.8l1.1-2.2 1.1 2.2h1.8l-2-3.5 2-3.5h-1.8l-1.1 2.1-1.1-2.1H8.5z"/>
+                </svg>
+                ייצוא System Data
+            </button>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left 2 Cols: Inputs -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- General Parameters Card -->
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-lg space-y-4">
+                    <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 flex items-center gap-2">
+                        <span>⚙️</span> הגדרות פרויקט ופרמטרים
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-3 border-b border-slate-800/60">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">שם הפרויקט לדו"ח האקסל</label>
+                            <input type="text" id="projectName" value="Agro Timurim" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-100 font-semibold focus:outline-none focus:border-emerald-500 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">קיבולת אגירה BESS (MWh)</label>
+                            <input type="number" id="bessCapacity" value="15" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 transition">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">הספק פאנל בודד (W)</label>
+                            <input type="number" id="modulePower" value="650" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">יחס יעד מבוקש (DC/AC)</label>
+                            <input type="number" step="0.01" id="targetRatio" value="1.05" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">הספק תחנת MVS (kVA)</label>
+                            <input type="number" id="mvsRating" value="6400" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 transition">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tables Configuration Card -->
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-lg space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <h2 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+                            <span>📐</span> פריסת שולחנות וסטרינגים בשדה
+                        </h2>
+                        <button id="addTableBtn" class="bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                            <span>+</span> הוסף סוג שולחן
+                        </button>
+                    </div>
+
+                    <div id="tablesContainer" class="space-y-3">
+                        <!-- Table rows injected via JS -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Col: Summary Results -->
+            <div class="space-y-6">
+                
+                <!-- Main KPI Card -->
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-lg space-y-5">
+                    <h2 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3 flex items-center gap-2">
+                        <span>📊</span> סיכום תוצאות המתקן
+                    </h2>
+
+                    <!-- Total DC Power -->
+                    <div class="bg-slate-950 border border-slate-800/80 p-4 rounded-xl relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-slate-800/50 text-6xl">⚡</div>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block relative z-10">הספק DC מותקן בשדה</span>
+                        <div class="flex items-baseline gap-2 mt-1 relative z-10">
+                            <span id="totalDCPower" class="text-3xl font-extrabold text-emerald-400">0</span>
+                            <span class="text-slate-400 font-semibold">MWp</span>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-1 font-mono relative z-10" id="totalDCPowerKW">0 kWp</div>
+                    </div>
+
+                    <!-- Required AC Power -->
+                    <div class="bg-slate-950 border border-slate-800/80 p-4 rounded-xl">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">הספק AC מחושב ליעד</span>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span id="requiredACPower" class="text-3xl font-extrabold text-blue-400">0</span>
+                            <span class="text-slate-400 font-semibold">MVA</span>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-1 font-mono" id="requiredACPowerKVA">0 kVA</div>
+                    </div>
+
+                    <!-- MVS Count -->
+                    <div class="bg-slate-950 border border-emerald-500/30 p-5 rounded-xl bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/20">
+                        <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider block">כמות תחנות MVS נדרשת (תיאורטי)</span>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span id="mvsExactCount" class="text-4xl font-black text-white">0.00</span>
+                            <span class="text-emerald-400 font-bold">תחנות</span>
+                        </div>
+                    </div>
+
+                    <!-- Field Quantities -->
+                    <div class="space-y-2 text-xs border-t border-slate-800 pt-4">
+                        <div class="flex justify-between py-1 border-b border-slate-800/40">
+                            <span class="text-slate-400">סה"כ פאנלים סולאריים:</span>
+                            <span id="totalPanelsCount" class="font-bold text-slate-200 font-mono text-sm">0</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-800/40">
+                            <span class="text-slate-400">סה"כ שולחנות בשדה:</span>
+                            <span id="totalTablesCount" class="font-bold text-slate-200 font-mono text-sm">0</span>
+                        </div>
+                        <div class="flex justify-between py-1">
+                            <span class="text-slate-400">סה"כ סטרינגים בשדה:</span>
+                            <span id="totalStringsCount" class="font-bold text-slate-200 font-mono text-sm">0</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let tableData = [
+            { id: 1, name: "שולחן 108 פאנלים (מלא)", type: "2P", strings: 4, panelsPerString: 27, count: 513 },
+            { id: 2, name: "שולחן 54 פאנלים (חצי)", type: "2P", strings: 2, panelsPerString: 27, count: 62 }
+        ];
+
+        let state = {};
+
+        function renderTables() {
+            const container = document.getElementById('tablesContainer');
+            container.innerHTML = '';
+
+            tableData.forEach((row, index) => {
+                const panelsPerTable = row.strings * row.panelsPerString;
+                const totalModulesInRow = panelsPerTable * row.count;
+
+                const div = document.createElement('div');
+                div.className = "bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-3 relative group hover:border-slate-600 transition-colors";
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <input type="text" value="${row.name}" onchange="updateRow(${index}, 'name', this.value)" 
+                               class="bg-transparent text-sm font-bold text-slate-200 focus:outline-none border-b border-transparent focus:border-slate-700">
+                        ${tableData.length > 1 ? `
+                            <button onclick="removeRow(${index})" class="text-slate-500 hover:text-red-400 text-xs px-2 py-1 transition">
+                                הסר ✕
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
+                        <div>
+                            <span class="text-slate-500 block mb-1">תצורה</span>
+                            <select onchange="updateRow(${index}, 'type', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-300">
+                                <option value="2P" ${row.type === '2P' ? 'selected' : ''}>2P Tracker</option>
+                                <option value="1P" ${row.type === '1P' ? 'selected' : ''}>1P Tracker</option>
+                                <option value="Fixed" ${row.type === 'Fixed' ? 'selected' : ''}>Fixed Tilt</option>
+                            </select>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block mb-1">סטרינגים לשולחן</span>
+                            <input type="number" min="1" value="${row.strings}" onchange="updateRow(${index}, 'strings', parseInt(this.value) || 1)" 
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 font-mono">
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block mb-1">פאנלים בסטרינג</span>
+                            <input type="number" min="1" value="${row.panelsPerString}" onchange="updateRow(${index}, 'panelsPerString', parseInt(this.value) || 1)" 
+                                   class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 font-mono">
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block mb-1">כמות שולחנות</span>
+                            <input type="number" min="0" value="${row.count}" onchange="updateRow(${index}, 'count', parseInt(this.value) || 0)" 
+                                   class="w-full bg-slate-900 border border-emerald-500/50 rounded-lg p-2 text-emerald-400 font-bold font-mono">
+                        </div>
+                        <div class="col-span-2 sm:col-span-1 flex flex-col justify-end bg-slate-900/50 p-2 rounded-lg border border-slate-800/40">
+                            <span class="text-slate-500 block text-[10px]">סה"כ פאנלים פה</span>
+                            <span class="font-bold text-slate-300 font-mono">${totalModulesInRow.toLocaleString()}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            calculate();
+        }
+
+        function updateRow(index, field, value) {
+            tableData[index][field] = value;
+            renderTables();
+        }
+
+        function removeRow(index) {
+            tableData.splice(index, 1);
+            renderTables();
+        }
+
+        function addRow() {
+            tableData.push({
+                id: Date.now(),
+                name: `שולחן סוג ${tableData.length + 1}`,
+                type: "2P",
+                strings: 4,
+                panelsPerString: 27,
+                count: 0
+            });
+            renderTables();
+        }
+
+        function calculate() {
+            const modulePower = parseFloat(document.getElementById('modulePower').value) || 650;
+            const targetRatio = parseFloat(document.getElementById('targetRatio').value) || 1.05;
+            const mvsRating = parseFloat(document.getElementById('mvsRating').value) || 6400;
+
+            let totalPanels = 0;
+            let totalTables = 0;
+            let totalStrings = 0;
+
+            tableData.forEach(row => {
+                const panelsInTable = row.strings * row.panelsPerString;
+                totalPanels += panelsInTable * row.count;
+                totalTables += row.count;
+                totalStrings += row.strings * row.count;
+            });
+
+            const totalDCPowerW = totalPanels * modulePower;
+            const totalDCPowerKW = totalDCPowerW / 1000;
+            const totalDCPowerMW = totalDCPowerKW / 1000;
+
+            const requiredACPowerKVA = totalDCPowerKW / targetRatio;
+            const requiredACPowerMVA = requiredACPowerKVA / 1000;
+
+            const exactMVS = requiredACPowerKVA / mvsRating;
+
+            // Save global state for Excel Export
+            state = {
+                modulePower,
+                totalPanels,
+                totalDCPowerMW,
+                requiredACPowerMVA
+            };
+
+            // Update DOM
+            document.getElementById('totalDCPower').innerText = totalDCPowerMW.toFixed(2);
+            document.getElementById('totalDCPowerKW').innerText = `${totalDCPowerKW.toLocaleString(undefined, {maximumFractionDigits: 1})} kWp`;
+
+            document.getElementById('requiredACPower').innerText = requiredACPowerMVA.toFixed(2);
+            document.getElementById('requiredACPowerKVA').innerText = `${requiredACPowerKVA.toLocaleString(undefined, {maximumFractionDigits: 1})} kVA`;
+
+            document.getElementById('mvsExactCount').innerText = exactMVS.toFixed(2);
+            document.getElementById('totalPanelsCount').innerText = totalPanels.toLocaleString();
+            document.getElementById('totalTablesCount').innerText = totalTables.toLocaleString();
+            document.getElementById('totalStringsCount').innerText = totalStrings.toLocaleString();
+        }
+
+        // --- ExcelJS Export Logic ---
+        async function exportToExcel() {
+            const projectName = document.getElementById('projectName').value || "Project";
+            const bessCapacity = document.getElementById('bessCapacity').value || "0";
+            
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('System Data');
+
+            // Set column widths to match the requested image
+            worksheet.columns = [
+                { width: 3 },  // A (padding)
+                { width: 36 }, // B (Labels)
+                { width: 32 }  // C (Values)
+            ];
+
+            // Setup Header (Merged B2:C2)
+            worksheet.mergeCells('B2:C2');
+            const titleCell = worksheet.getCell('B2');
+            titleCell.value = `${projectName} - System Data`;
+            titleCell.font = { name: 'Calibri', size: 12, bold: true, color: { argb: 'FF000000' } };
+            titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+            titleCell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFC5E0B3' } // Excel Light Green Accent
+            };
+
+            // Define bold border style
+            const boldBorder = {
+                top: { style: 'medium', color: { argb: 'FF000000' } },
+                left: { style: 'medium', color: { argb: 'FF000000' } },
+                bottom: { style: 'medium', color: { argb: 'FF000000' } },
+                right: { style: 'medium', color: { argb: 'FF000000' } }
+            };
+
+            titleCell.border = boldBorder;
+            worksheet.getCell('C2').border = boldBorder;
+
+            // Format numbers for Grid Power
+            const mwVal = (state.requiredACPowerMVA * 0.9).toFixed(3);
+            const mvaVal = state.requiredACPowerMVA.toFixed(2);
+
+            // Data Rows corresponding exactly to the image
+            const rows = [
+                ["Grid MV Rated Power", `${mwVal} [MW] / ${mvaVal} [MVA]`],
+                ["Storage Capacity Stage A", `${bessCapacity} [MWh]`],
+                ["PV Module Quantity", state.totalPanels.toLocaleString('en-US')],
+                ["PV Module Rated Power", `${state.modulePower} [Wp]`],
+                ["PV DC Installed Power Stage A", `${state.totalDCPowerMW.toFixed(2)} [MWp]`],
+                ["Storage Capacity Stage B", `${bessCapacity} [MWh]`],
+                ["PV Module Quantity", state.totalPanels.toLocaleString('en-US')],
+                ["PV DC Installed Power Stage B", `${state.totalDCPowerMW.toFixed(2)} [MWp]`]
+            ];
+
+            // Populate rows B3:C10
+            rows.forEach((r, idx) => {
+                const rowNum = 3 + idx;
+                const cellB = worksheet.getCell(`B${rowNum}`);
+                const cellC = worksheet.getCell(`C${rowNum}`);
+
+                // Label Column (B)
+                cellB.value = r[0];
+                cellB.font = { name: 'Calibri', size: 12, bold: true };
+                cellB.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                cellB.border = boldBorder;
+
+                // Value Column (C)
+                cellC.value = r[1];
+                cellC.font = { name: 'Calibri', size: 12, bold: true };
+                cellC.alignment = { vertical: 'middle', horizontal: 'center' };
+                cellC.border = boldBorder;
+            });
+
+            // Generate and save file
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `${projectName.replace(/\s+/g, '_')}_System_Data.xlsx`);
+        }
+
+        // Attach listeners
+        document.getElementById('projectName').addEventListener('input', calculate);
+        document.getElementById('bessCapacity').addEventListener('input', calculate);
+        document.getElementById('modulePower').addEventListener('input', calculate);
+        document.getElementById('targetRatio').addEventListener('input', calculate);
+        document.getElementById('mvsRating').addEventListener('input', calculate);
+        document.getElementById('addTableBtn').addEventListener('click', addRow);
+
+        // Initial run
+        renderTables();
+    </script>
+</body>
+</html>
